@@ -5,8 +5,8 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher, types, executor
 from dotenv import load_dotenv
 
-from categories import Categories
-from db import init_db_if_not_exists
+from models.categories import Categories
+from models.db import init_db_if_not_exists
 from middlewares import AccessMiddleware
 
 load_dotenv(dotenv_path=Path(".") / ".env")

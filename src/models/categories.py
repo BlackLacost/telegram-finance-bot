@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from db import connect
+from models.db import connect
 
 
 @dataclass
