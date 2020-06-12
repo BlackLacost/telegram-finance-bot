@@ -32,6 +32,7 @@ async def send_help_handler(message: types.Message):
     await message.answer(
         "Бот для учёта финансов\n\n"
         "Добавить расход: 250 такси\n"
+        "Сегодняшняя статистика: /today\n"
         "Последние внесённые расходы: /expenses\n"
         "Категории трат: /categories"
     )
@@ -42,6 +43,24 @@ async def get_categories_handler(message: types.Message):
     categories = Categories().get_all_categories()
     answer_message = "Категории трат:\n\n* " + "\n* ".join(
         [category.name for category in categories]
+    )
+    await message.answer(answer_message)
+
+
+@dp.message_handler(commands=["today"])
+async def today_statistics_handler(message: types.Message):
+    """Отправляет сегодняшнюю статистику трат"""
+    total_today_expenses = expenses.get_all_today_expenses()
+    if total_today_expenses == 0:
+        return await message.answer("Сегодня ещё нет расходов")
+
+    base_today_expenses = expenses.get_base_today_expenses()
+    budget_limit = expenses.get_budget_limit()
+
+    answer_message = (
+        f"Расходы сегодня:\n"
+        f"всего - {total_today_expenses} руб.\n"
+        f"базовые - {base_today_expenses} руб. из {budget_limit}"
     )
     await message.answer(answer_message)
 

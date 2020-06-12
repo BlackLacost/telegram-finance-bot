@@ -48,6 +48,50 @@ def delete_expense(expense_id: int) -> None:
         )
 
 
+def get_all_today_expenses() -> int:
+    """Возвращает все сегодняшние расходы"""
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT SUM(amount)
+            FROM expense
+            WHERE DATE(created)=DATE('NOW')
+            """
+        )
+        result = cur.fetchone()
+        total_expenses = result[0] if result[0] else 0
+        return total_expenses
+
+
+def get_base_today_expenses() -> int:
+    """Возвращает базовые расходы на сегодня"""
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT SUM(amount)
+            FROM expense
+            WHERE
+                DATE(created)=DATE('NOW')
+                AND category_codename IN (
+                    SELECT codename
+                    FROM category
+                    WHERE is_base_expense=true
+                )
+            """
+        )
+        result = cur.fetchone()
+        base_today_expenses = result[0] if result[0] else 0
+        return base_today_expenses
+
+
+def get_budget_limit() -> int:
+    """Возвращает дневной лимит трат для основных базовых трат"""
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT daily_limit FROM budget WHERE codename = 'base'")
+        base_limit = int(cur.fetchone()[0])
+        return base_limit
+
+
 def last(num: int) -> List[Expense]:
     """Возвращает последние несколько расходов"""
     with connect() as conn, conn.cursor() as cur:
