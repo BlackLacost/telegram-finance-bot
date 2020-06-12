@@ -41,6 +41,13 @@ def add_expense(raw_message: str) -> Expense:
     )
 
 
+def delete_expense(expense_id: int) -> None:
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM expense WHERE id = %s", (expense_id,),
+        )
+
+
 def last(num: int) -> List[Expense]:
     """Возвращает последние несколько расходов"""
     with connect() as conn, conn.cursor() as cur:

@@ -53,12 +53,22 @@ async def list_expenses_handler(message: types.Message):
         return await message.answer("Расходы ещё не заведены")
 
     last_expenses_rows = [
-        f"{expense.amount} руб. на {expense.category_name}"
+        f"{expense.amount} руб. на {expense.category_name} - "
+        f"нажми /del{expense.id} для удаления"
         for expense in last_expenses
     ]
     answer_message = "Последние сохранённые траты:\n\n* " + "\n* ".join(
         last_expenses_rows
     )
+    await message.answer(answer_message)
+
+
+@dp.message_handler(lambda message: message.text.startswith("/del"))
+async def del_expense_handler(message: types.Message):
+    """Удаляет одну запись о расходе по её идентификатору"""
+    expense_id = int(message.text[4:])
+    expenses.delete_expense(expense_id)
+    answer_message = "Удалил"
     await message.answer(answer_message)
 
 
