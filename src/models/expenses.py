@@ -14,6 +14,13 @@ class Message:
 
 
 @dataclass
+class TodayExpenses:
+    total: int
+    base: int
+    budget_limit: int
+
+
+@dataclass
 class Expense:
     id: Optional[int]
     amount: int
@@ -48,7 +55,7 @@ def delete_expense(expense_id: int) -> None:
         )
 
 
-def get_all_today_expenses() -> int:
+def _get_all_today_expenses() -> int:
     """Возвращает все сегодняшние расходы"""
     with connect() as conn, conn.cursor() as cur:
         cur.execute(
@@ -63,7 +70,7 @@ def get_all_today_expenses() -> int:
         return total_expenses
 
 
-def get_base_today_expenses() -> int:
+def _get_base_today_expenses() -> int:
     """Возвращает базовые расходы на сегодня"""
     with connect() as conn, conn.cursor() as cur:
         cur.execute(
@@ -84,12 +91,20 @@ def get_base_today_expenses() -> int:
         return base_today_expenses
 
 
-def get_budget_limit() -> int:
+def _get_budget_limit() -> int:
     """Возвращает дневной лимит трат для основных базовых трат"""
     with connect() as conn, conn.cursor() as cur:
         cur.execute("SELECT daily_limit FROM budget WHERE codename = 'base'")
         base_limit = int(cur.fetchone()[0])
         return base_limit
+
+
+def today_statistics_expenses() -> TodayExpenses:
+    return TodayExpenses(
+        total=_get_all_today_expenses(),
+        base=_get_base_today_expenses(),
+        budget_limit=_get_budget_limit(),
+    )
 
 
 def last(num: int) -> List[Expense]:
