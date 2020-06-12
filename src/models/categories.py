@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Union
 
 from models.db import connect
 
@@ -25,3 +25,15 @@ class Categories:
 
     def get_all_categories(self) -> List[Category]:
         return self._categories
+
+    def get_category(self, category_name: str) -> Union[Category, None]:
+        finded = None
+        other_category = None
+        for category in self._categories:
+            if category.codename == "other":
+                other_category = category
+            if category_name == category.name:
+                finded = category
+        if not finded:
+            finded = other_category
+        return finded

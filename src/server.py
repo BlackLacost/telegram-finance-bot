@@ -5,6 +5,8 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher, types, executor
 from dotenv import load_dotenv
 
+from exceptions import NotCorrectMessage
+from models import expenses
 from models.categories import Categories
 from models.db import init_db_if_not_exists
 from middlewares import AccessMiddleware
@@ -26,17 +28,31 @@ if ACCESS_ID:
 
 
 @dp.message_handler(commands=["start", "help"])
-async def send_help(message: types.Message):
+async def send_help_handler(message: types.Message):
     await message.answer(
-        "Бот для учёта финансов\n\n" "Категории трат: /categories"
+        "Бот для учёта финансов\n\n"
+        "Добавить расход: 250 такси\n"
+        "Категории трат: /categories"
     )
 
 
 @dp.message_handler(commands=["categories"])
-async def categories_list(message: types.Message):
+async def get_categories_handler(message: types.Message):
     categories = Categories().get_all_categories()
     answer_message = "Категории трат:\n\n* " + "\n* ".join(
         [category.name for category in categories]
+    )
+    await message.answer(answer_message)
+
+
+@dp.message_handler()
+async def add_expense_handler(message: types.Message):
+    try:
+        expense = expenses.add_expense(message.text)
+    except NotCorrectMessage as e:
+        return await message.answer(str(e))
+    answer_message = (
+        f"Добавлены траты {expense.amount} руб на {expense.category_name}"
     )
     await message.answer(answer_message)
 

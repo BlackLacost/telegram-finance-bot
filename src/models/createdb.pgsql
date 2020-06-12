@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS category(
 );
 
 CREATE TABLE IF NOT EXISTS expense(
-  id INTEGER PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   amount INTEGER,
   created TIMESTAMP,
   category_codename VARCHAR(255),
