@@ -1,0 +1,17 @@
+version: "3.4"
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: debug
+      POSTGRES_PASSWORD: debug
+      POSTGRES_DB: debug
+    volumes:
+      - finance-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+volumes:
+  finance-data:
