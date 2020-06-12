@@ -32,6 +32,7 @@ async def send_help_handler(message: types.Message):
     await message.answer(
         "Бот для учёта финансов\n\n"
         "Добавить расход: 250 такси\n"
+        "Последние внесённые расходы: /expenses\n"
         "Категории трат: /categories"
     )
 
@@ -41,6 +42,22 @@ async def get_categories_handler(message: types.Message):
     categories = Categories().get_all_categories()
     answer_message = "Категории трат:\n\n* " + "\n* ".join(
         [category.name for category in categories]
+    )
+    await message.answer(answer_message)
+
+
+@dp.message_handler(commands=["expenses"])
+async def list_expenses_handler(message: types.Message):
+    last_expenses = expenses.last(10)
+    if not last_expenses:
+        return await message.answer("Расходы ещё не заведены")
+
+    last_expenses_rows = [
+        f"{expense.amount} руб. на {expense.category_name}"
+        for expense in last_expenses
+    ]
+    answer_message = "Последние сохранённые траты:\n\n* " + "\n* ".join(
+        last_expenses_rows
     )
     await message.answer(answer_message)
 

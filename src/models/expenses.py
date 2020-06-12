@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from exceptions import NotCorrectMessage
 from models.categories import Categories
@@ -39,6 +39,27 @@ def add_expense(raw_message: str) -> Expense:
     return Expense(
         id=None, amount=parsed_message.amount, category_name=category.name
     )
+
+
+def last(num: int) -> List[Expense]:
+    """Возвращает последние несколько расходов"""
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT
+                expense.id,
+                expense.amount,
+                category.name
+            FROM expense
+            JOIN category
+                ON expense.category_codename = category.codename
+            ORDER BY created DESC
+            LIMIT %s
+            """,
+            (num,),
+        )
+        last_expenses = [Expense(*row) for row in cur]
+        return last_expenses
 
 
 def _parse_message(raw_message: str) -> Message:
