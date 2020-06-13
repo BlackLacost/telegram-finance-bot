@@ -18,7 +18,10 @@ def del_expense() -> str:
 
 def get_categories(categories: List[Category]) -> str:
     answer_message = "Категории трат:\n\n* " + "\n* ".join(
-        [category.name for category in categories]
+        [
+            f"{category.name} + ({', '.join(category.aliases)})"
+            for category in categories
+        ]
     )
     return answer_message
 
