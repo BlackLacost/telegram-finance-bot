@@ -1,6 +1,9 @@
 import re
+import datetime
 from dataclasses import dataclass
 from typing import List, Optional
+
+import pytz
 
 from exceptions import NotCorrectMessage
 from models.categories import Categories
@@ -14,7 +17,7 @@ class Message:
 
 
 @dataclass
-class TodayExpenses:
+class ExpensesStats:
     total: int
     base: int
     budget_limit: int
@@ -99,11 +102,60 @@ def _get_budget_limit() -> int:
         return base_limit
 
 
-def today_statistics_expenses() -> TodayExpenses:
-    return TodayExpenses(
+def today_statistics_expenses() -> ExpensesStats:
+    return ExpensesStats(
         total=_get_all_today_expenses(),
         base=_get_base_today_expenses(),
         budget_limit=_get_budget_limit(),
+    )
+
+
+def _get_total_month_expenses() -> int:
+    """Возвращает сумму расходов за текущий месяц"""
+    first_day_of_month = _get_first_day_of_month()
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT SUM(amount)
+            FROM expense
+            WHERE DATE(created) >= %s
+            """,
+            (first_day_of_month,),
+        )
+        result = cur.fetchone()
+        total_month_expenses = result[0] if result[0] else 0
+        return total_month_expenses
+
+
+def _get_total_base_month_expenses() -> int:
+    """Возвращает сумму базовых расходов за текущей месяц"""
+    first_day_of_month = _get_first_day_of_month()
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT SUM(amount)
+            FROM expense
+            WHERE
+                DATE(created) >= %s
+                AND category_codename IN (
+                    SELECT codename
+                    FROM category
+                    WHERE is_base_expense=true
+                )
+            """,
+            (first_day_of_month,),
+        )
+        result = cur.fetchone()
+        total_base_month_expenses = result[0] if result[0] else 0
+        return total_base_month_expenses
+
+
+def month_statistics_expenses() -> ExpensesStats:
+    now = _get_now_datetime()
+    return ExpensesStats(
+        total=_get_total_month_expenses(),
+        base=_get_total_base_month_expenses(),
+        budget_limit=now.day * _get_budget_limit(),
     )
 
 
@@ -143,3 +195,21 @@ def _parse_message(raw_message: str) -> Message:
     amount = int(regexp_result.group(1))
     category_text = regexp_result.group(2).strip().lower()
     return Message(amount=amount, category_text=category_text)
+
+
+def _get_now_datetime() -> datetime.datetime:
+    """Возвращает сегодняшний datetime с учётом времненной зоны Мск."""
+    tz = pytz.timezone("Europe/Moscow")
+    now = datetime.datetime.now(tz)
+    return now
+
+
+def _get_now_formatted() -> str:
+    """Возвращает сегодняшнюю дату строкой"""
+    return _get_now_datetime().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _get_first_day_of_month() -> str:
+    now = _get_now_datetime()
+    first_day_of_month = f"{now.year:04d}-{now.month:02d}-01"
+    return first_day_of_month

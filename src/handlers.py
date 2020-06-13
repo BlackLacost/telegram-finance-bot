@@ -28,6 +28,14 @@ async def today_statistics_handler(message: types.Message):
     await message.answer(answer_message)
 
 
+@dp.message_handler(commands=["month"])
+async def month_statistics(message: types.Message):
+    """Отправляет статистику трат текущего месяца"""
+    month_expenses = expenses.month_statistics_expenses()
+    answer_message = views.month_statistics_expenses(month_expenses)
+    await message.answer(answer_message)
+
+
 @dp.message_handler(commands=["expenses"])
 async def list_expenses_handler(message: types.Message):
     last_expenses = expenses.last(10)
